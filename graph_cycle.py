@@ -28,18 +28,19 @@ class Graph:
         Check if graph has a cycle.
         """
 
-        top_vertices: VertexSet = set(self.vertices.keys())
-        while len(top_vertices) > 0:
-            vertex: int = top_vertices.pop()
-            if self.detect_cycle(vertex, top_vertices):
+        remaining_vertices: VertexSet = set(self.vertices.keys())
+        while len(remaining_vertices) > 0:
+            vertex: int = remaining_vertices.pop()
+            cycle_flag, visited = self.detect_cycle(vertex)
+            remaining_vertices -= visited
+            if cycle_flag:
                 return True
         return False
 
-    def detect_cycle(self, from_vertex: int, top_vertices: VertexSet) -> bool:
+    def detect_cycle(self, from_vertex: int) -> typing.Tuple[bool, VertexSet]:
         """
         Starting from given vertex, walk the edges, tracking visited vertices in the process.
-        Function returns true if it detects a cycle, false otherwise.
-        The function removes encountered vertices from the top_vertices set.
+        Function returns a pair; has cycle flag (True/False), and set of visited vertices.
         """
 
         visited: VertexSet = set()
@@ -48,8 +49,6 @@ class Graph:
         def mark_and_collect(src_vertex):
             visited.add(src_vertex)
             for vertex in self.vertices[src_vertex]:
-                if vertex in top_vertices:
-                    top_vertices.remove(vertex)
                 to_visit.add(vertex)
 
         mark_and_collect(from_vertex)
@@ -57,10 +56,10 @@ class Graph:
         while len(to_visit) > 0:
             dest_vertex: int = to_visit.pop()
             if dest_vertex in visited:
-                return True
+                return True, visited
             mark_and_collect(dest_vertex)
 
-        return False
+        return False, visited
 
 def test_cycle() -> None:
     """
