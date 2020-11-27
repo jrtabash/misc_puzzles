@@ -1,4 +1,4 @@
-# misc_puzzles
+# Misc Coding Puzzles
 Solutions to miscellaneous coding puzzles.
 
 All puzzle solutions in repo use static python typing, and have all been tested with mypy static type checker.
