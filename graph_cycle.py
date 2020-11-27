@@ -12,7 +12,6 @@ InputEdges = typing.Sequence[typing.Tuple[int, int]]
 
 GraphVertices = typing.Mapping[int, typing.MutableSequence[int]]
 VertexSet = typing.MutableSet[int]
-VertexList = typing.MutableSequence[int]
 
 class Graph:
     """
@@ -44,20 +43,19 @@ class Graph:
         """
 
         visited: VertexSet = set()
-        to_visit: VertexList = list()
+        to_visit: VertexSet = set()
 
         def mark_and_collect(src_vertex):
             visited.add(src_vertex)
             for vertex in self.vertices[src_vertex]:
                 if vertex in top_vertices:
                     top_vertices.remove(vertex)
-                if not vertex in to_visit:
-                    to_visit.append(vertex)
+                to_visit.add(vertex)
 
         mark_and_collect(from_vertex)
 
         while len(to_visit) > 0:
-            dest_vertex: int = to_visit.pop(0)
+            dest_vertex: int = to_visit.pop()
             if dest_vertex in visited:
                 return True
             mark_and_collect(dest_vertex)
