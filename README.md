@@ -8,3 +8,4 @@ Solved puzzles include:
 2. [Generate Primes up to N](generate_primes.py)
 3. [Check directed graph has cycles](graph_cycle.py)
 4. [Max Continguous Sum](max_contiguous_sum.py)
+5. [Number of Islands](number_of_islands.py)
