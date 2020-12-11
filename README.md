@@ -10,3 +10,4 @@ Solved puzzles include:
 4. [Max continguous sum](max_contiguous_sum.py)
 5. [Number of islands](number_of_islands.py)
 6. [Count ways to climb a staircase](staircase_steps.py)
+7. [Conway's Game of Life](game_of_life.py)
