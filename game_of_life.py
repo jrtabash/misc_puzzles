@@ -8,15 +8,21 @@ This program simulates game of life.
 
 import sys
 import os
-from time import sleep
-from typing import MutableSequence, Sequence, Final, Optional
+import random
+import time
+import typing
+from typing import Final
 
-Row = MutableSequence[int]
-Grid = Sequence[Row]
+Row = typing.MutableSequence[int]
+Grid = typing.Sequence[Row]
+GenInfo = typing.Optional[typing.Tuple[int, int]]
 
 SIZE: Final = 32
 ON: Final = 1
 OFF: Final = 0
+
+FUNNEL: Final = 1
+DIAMOND: Final = 2
 
 def make_grid() -> Grid:
     """
@@ -30,17 +36,29 @@ def init_grid(grid: Grid) -> None:
     Set initial live cells.
     """
 
-    for i, j in [(5, 10), (5, 11), (5, 12), (5, 13), (5, 14), (5, 15), (5, 16),
-                 (6, 10), (6, 11), (6, 12), (6, 13), (6, 14), (6, 15), (6, 16),
-                 (7, 11), (7, 12), (7, 13), (7, 14), (7, 15),
-                 (8, 11), (8, 12), (8, 13), (8, 14), (8, 15),
-                 (9, 12), (9, 13), (9, 14),
-                 (10, 12), (10, 13), (10, 14),
-                 (11, 12), (11, 13), (11, 14),
-                 (12, 12), (12, 13), (12, 14)]:
-        grid[i][j] = ON
+    which: Final = random.choice([FUNNEL, DIAMOND])
+    if which == FUNNEL:
+        for i, j in [(5, 10), (5, 11), (5, 12), (5, 13), (5, 14), (5, 15), (5, 16),
+                     (6, 10), (6, 11), (6, 12), (6, 13), (6, 14), (6, 15), (6, 16),
+                     (7, 11), (7, 12), (7, 13), (7, 14), (7, 15),
+                     (8, 11), (8, 12), (8, 13), (8, 14), (8, 15),
+                     (9, 12), (9, 13), (9, 14),
+                     (10, 12), (10, 13), (10, 14),
+                     (11, 12), (11, 13), (11, 14),
+                     (12, 12), (12, 13), (12, 14)]:
+            grid[i][j] = ON
+    elif which == DIAMOND:
+        for i, j in [(11, 15), (11, 16),
+                     (12, 13), (12, 14), (12, 17), (12, 18),
+                     (13, 11), (13, 12), (13, 19), (13, 20),
+                     (14, 9), (14, 10), (14, 21), (14, 22),
+                     (15, 9), (15, 10), (15, 21), (15, 22),
+                     (16, 11), (16, 12), (16, 19), (16, 20),
+                     (17, 13), (17, 14), (17, 17), (17, 18),
+                     (18, 15), (18, 16)]:
+            grid[i][j] = ON
 
-def print_grid(grid: Grid, gen: Optional[int] = None) -> None:
+def print_grid(grid: Grid, gen_info: GenInfo = None) -> None:
     """
     Print game of life grid.
     """
@@ -52,8 +70,8 @@ def print_grid(grid: Grid, gen: Optional[int] = None) -> None:
             sys.stdout.write('o' if cell == ON else '.')
         sys.stdout.write('\n')
 
-    if gen is not None:
-        sys.stdout.write(f"Generation: {gen}\n")
+    if gen_info:
+        sys.stdout.write(f"Generation: {gen_info[0]}/{gen_info[1]}\n")
 
 def count_neighbors(grid: Grid, i: int, j: int) -> int:
     """
@@ -112,13 +130,14 @@ def simulate_game(ngen: int, delay: float = 0.5) -> None:
 
     grid = make_grid()
     init_grid(grid)
-    print_grid(grid, 0)
-    sleep(delay)
+    print_grid(grid, (0, ngen))
+    time.sleep(max(delay, 2.0))
 
     for gen in range(1, ngen + 1):
         grid = next_generation(grid)
-        print_grid(grid, gen)
-        sleep(delay)
+        print_grid(grid, (gen, ngen))
+        time.sleep(delay)
 
 if __name__ == "__main__":
-    simulate_game(30)
+    random.seed(int(time.time()))
+    simulate_game(random.randint(20, 50))
