@@ -12,12 +12,13 @@ import random
 import time
 from puzzle_types import Grid, OptIntPair, Final
 
-SIZE: Final = 32
+SIZE: Final = 48
 ON: Final = 1
 OFF: Final = 0
 
 FUNNEL: Final = 1
 DIAMOND: Final = 2
+XCROSS: Final = 3
 
 def make_grid() -> Grid:
     """
@@ -31,7 +32,7 @@ def init_grid(grid: Grid) -> None:
     Set initial live cells.
     """
 
-    which: Final = random.choice([FUNNEL, DIAMOND])
+    which: Final = random.choice([FUNNEL, DIAMOND, XCROSS])
     if which == FUNNEL:
         for i, j in [(5, 10), (5, 11), (5, 12), (5, 13), (5, 14), (5, 15), (5, 16),
                      (6, 10), (6, 11), (6, 12), (6, 13), (6, 14), (6, 15), (6, 16),
@@ -52,6 +53,22 @@ def init_grid(grid: Grid) -> None:
                      (17, 13), (17, 14), (17, 17), (17, 18),
                      (18, 15), (18, 16)]:
             grid[i][j] = ON
+    elif which == XCROSS:
+        for i, j in [(16, 8), (16, 9), (16, 10), (16, 20), (16, 21), (16, 22),
+                     (17, 10), (18, 10), (18, 20), (17, 20),
+                     (18, 11), (18, 12), (18, 18), (18, 19),
+                     (19, 12), (20, 12), (20, 18), (19, 18),
+                     (20, 13), (20, 14), (20, 16), (20, 17),
+                     (21, 14), (22, 14), (22, 16), (21, 16),
+                     (22, 15), (22, 16), (23, 14), (24, 14),
+                     (23, 16), (24, 16), (24, 13), (24, 12),
+                     (24, 17), (24, 18), (25, 12), (26, 12),
+                     (25, 18), (26, 18), (26, 11), (26, 10),
+                     (26, 19), (26, 20), (27, 10), (28, 10),
+                     (27, 20), (28, 20), (28, 9), (28, 8),
+                     (28, 21), (28, 21), (28, 22)]:
+            grid[i][j] = ON
+
 
 def print_grid(grid: Grid, gen_info: OptIntPair = None) -> None:
     """
