@@ -7,11 +7,7 @@ share the same row, column, or diagonal.
 This program solves the 8 queens puzzle.
 """
 
-from typing import Sequence, MutableSequence, Callable, Final
-
-Row = MutableSequence[int]
-Board = Sequence[Row]
-NextIndexFtn = Callable[[int], int]
+from puzzle_types import Board, NextIndexFtn, Final
 
 SIZE: Final = 8
 SPACE: Final = 0

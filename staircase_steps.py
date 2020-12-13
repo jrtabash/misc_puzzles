@@ -13,9 +13,7 @@ climb the staircase, as shown below:
 
 """
 
-import typing
-
-CountsCache = typing.MutableMapping[int, int]
+from puzzle_types import IntMap
 
 def count_steps(nsteps: int) -> int:
     """
@@ -23,7 +21,7 @@ def count_steps(nsteps: int) -> int:
     size nsteps if one can climb 1, 2 or 3 steps at a time.
     """
 
-    counts: CountsCache = {1: 1, 2: 2, 3: 4}
+    counts: IntMap = {1: 1, 2: 2, 3: 4}
     max_key: int = 3
 
     if nsteps > max_key:

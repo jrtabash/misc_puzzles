@@ -12,23 +12,18 @@ For instance, the following matrix contains 2 islands.
 
 """
 
-import typing
+from puzzle_types import IntMatrix, GraphMap, VertexSet, Final
 
-WorldMap = typing.Sequence[typing.Sequence[int]]
-WorldGraph = typing.Mapping[int, typing.MutableSequence[int]]
+ISLAND: Final = 1
 
-VertexSet = typing.MutableSet[int]
-
-ISLAND: typing.Final = 1
-
-def make_graph(world: WorldMap) -> WorldGraph:
+def make_graph(world: IntMatrix) -> GraphMap:
     """
     Generate a graph of the world from the 2D matrix of 0s and 1s.
     """
 
     size: int = len(world)
     vertex_size: int = size * size
-    graph: WorldGraph = {v: [] for v in range(vertex_size)}
+    graph: GraphMap = {v: [] for v in range(vertex_size)}
 
     def ij2vertex(i: int, j: int) -> int:
         return i * size + j
@@ -58,7 +53,7 @@ def make_graph(world: WorldMap) -> WorldGraph:
 
     return graph
 
-def count_islands(graph: WorldGraph) -> int:
+def count_islands(graph: GraphMap) -> int:
     """
     Calculate the number of islands in the graph, where connected
     nodes/vertices form an island.
@@ -75,7 +70,7 @@ def count_islands(graph: WorldGraph) -> int:
 
     return count
 
-def find_connected(graph: WorldGraph, from_vertex: int) -> VertexSet:
+def find_connected(graph: GraphMap, from_vertex: int) -> VertexSet:
     """
     Find all connected vertices starting from given vertex.
     """
@@ -102,7 +97,7 @@ def test_islands() -> None:
     Test number of islands.
     """
 
-    def test_case(name: str, actual_count: int, world_map: WorldMap) -> None:
+    def test_case(name: str, actual_count: int, world_map: IntMatrix) -> None:
         count = count_islands(make_graph(world_map))
         print(f"{name}: count={count} actual={actual_count}")
 

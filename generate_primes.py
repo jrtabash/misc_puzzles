@@ -4,12 +4,9 @@ than or equal to N.
 """
 
 import math
-import typing
+from puzzle_types import IntArray, IntGenerator
 
-Integers = typing.MutableSequence[int]
-PrimeGenerator = typing.Generator[int, None, None]
-
-def is_multiple_of(primes: Integers, num: int) -> bool:
+def is_multiple_of(primes: IntArray, num: int) -> bool:
     """
     Check if given num is a multiple of any of the given primes.
     Assumes primes sorted in increasing order.
@@ -23,7 +20,7 @@ def is_multiple_of(primes: Integers, num: int) -> bool:
             return True
     return False
 
-def generate_primes(max_int: int) -> PrimeGenerator:
+def generate_primes(max_int: int) -> IntGenerator:
     """
     Generate primes up to a maximum specified integer.
     """
@@ -32,7 +29,7 @@ def generate_primes(max_int: int) -> PrimeGenerator:
         yield 2
 
         cur_int: int = 1
-        primes: Integers = []
+        primes: IntArray = []
 
         while (cur_int := cur_int + 2) <= max_int:
             if is_multiple_of(primes, cur_int):

@@ -10,12 +10,7 @@ import sys
 import os
 import random
 import time
-import typing
-from typing import Final
-
-Row = typing.MutableSequence[int]
-Grid = typing.Sequence[Row]
-GenInfo = typing.Optional[typing.Tuple[int, int]]
+from puzzle_types import Grid, OptIntPair, Final
 
 SIZE: Final = 32
 ON: Final = 1
@@ -58,7 +53,7 @@ def init_grid(grid: Grid) -> None:
                      (18, 15), (18, 16)]:
             grid[i][j] = ON
 
-def print_grid(grid: Grid, gen_info: GenInfo = None) -> None:
+def print_grid(grid: Grid, gen_info: OptIntPair = None) -> None:
     """
     Print game of life grid.
     """

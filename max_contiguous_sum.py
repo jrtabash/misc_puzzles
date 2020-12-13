@@ -6,11 +6,9 @@ For instance, given the list [1, -2, 3, 2, -1], the maximum
 contiguous sum is 5, which is the sum of the sub range [3, 2].
 """
 
-from typing import Sequence
+from puzzle_types import IntArray
 
-Integers = Sequence[int]
-
-def mcs_linear(nums: Integers) -> int:
+def mcs_linear(nums: IntArray) -> int:
     """
     Calculate maximum contiguous sum for given sequence of integers.
     Complexity: O(n)
@@ -31,7 +29,7 @@ def mcs_linear(nums: Integers) -> int:
 
     return max_sum
 
-def mcs_quadratic(nums: Integers) -> int:
+def mcs_quadratic(nums: IntArray) -> int:
     """
     Calculate maximum contiguous sum for given sequence of integers.
     Complexity: O(n^2)
@@ -51,7 +49,7 @@ def mcs_quadratic(nums: Integers) -> int:
 
     return max_sum
 
-def test_mcs(nums: Integers, mcs_actual: int) -> None:
+def test_mcs(nums: IntArray, mcs_actual: int) -> None:
     """
     Calculate maximum contiguous sum, using both linear and quadratic functions,
     and display actual and calculated maximums.

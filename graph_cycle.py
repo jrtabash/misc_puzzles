@@ -5,21 +5,15 @@ and use its has_cycle function to check if it contains a
 cycle.
 """
 
-import typing
-
-InputVertices = typing.Sequence[int]
-InputEdges = typing.Sequence[typing.Tuple[int, int]]
-
-GraphVertices = typing.Mapping[int, typing.MutableSequence[int]]
-VertexSet = typing.MutableSet[int]
+from puzzle_types import VertexArray, EdgeArray, GraphMap, VertexSet, BoolVerticesPair
 
 class Graph:
     """
     This class represents a graph (V, E) with V vertices and E edges.
     """
 
-    def __init__(self, vertices: InputVertices, edges: InputEdges) -> None:
-        self.vertices: GraphVertices = {v: [] for v in vertices}
+    def __init__(self, vertices: VertexArray, edges: EdgeArray) -> None:
+        self.vertices: GraphMap = {v: [] for v in vertices}
         for edge in edges:
             self.vertices[edge[0]].append(edge[1])
 
@@ -37,7 +31,7 @@ class Graph:
                 return True
         return False
 
-    def detect_cycle(self, from_vertex: int) -> typing.Tuple[bool, VertexSet]:
+    def detect_cycle(self, from_vertex: int) -> BoolVerticesPair:
         """
         Starting from given vertex, walk the edges, tracking visited vertices in the process.
         Function returns a pair; has cycle flag (True/False), and set of visited vertices.
