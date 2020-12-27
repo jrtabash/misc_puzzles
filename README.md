@@ -11,3 +11,4 @@ Solved puzzles include:
 5. [Number of islands](number_of_islands.py)
 6. [Count ways to climb a staircase](staircase_steps.py)
 7. [Conway's Game of Life](game_of_life.py)
+8. [Estimate pi using Monte Carlo method](pi_monte_carlo.py)
