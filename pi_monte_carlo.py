@@ -28,7 +28,8 @@ Point = Tuple[float, float]
 
 def next_point() -> Point:
     """
-    Generate and return a random (x, y) point in range [0.0, 2.0)
+    Generate and return a random (x, y) point, with
+    both x and y in range [0.0, 2.0)
     """
 
     def next_coord() -> float:
