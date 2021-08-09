@@ -12,3 +12,4 @@ Solved puzzles include:
 6. [Count ways to climb a staircase](staircase_steps.py)
 7. [Conway's Game of Life](game_of_life.py)
 8. [Estimate pi using Monte Carlo method](pi_monte_carlo.py)
+9. [Box packing problem](box_packing.py)

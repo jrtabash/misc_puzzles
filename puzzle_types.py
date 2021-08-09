@@ -4,7 +4,7 @@ in the misc_puzzles repo.
 """
 
 import typing
-from typing import Final
+from typing import Final, Any
 
 # -------------------------
 # Integer Misc
@@ -23,6 +23,8 @@ OptIntPair = typing.Optional[IntPair]
 
 NextIndexFtn = typing.Callable[[int], int]
 IntGenerator = typing.Generator[int, None, None]
+
+AnyCallback = typing.Callable[[Any], None]
 
 # -------------------------
 # Grid / Board
