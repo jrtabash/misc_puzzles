@@ -109,7 +109,7 @@ class Box:
         self.width: int = width
     
     def __str__(self) -> str:
-        return f"{self.height}x{self.width}"
+        return f"{self.width}x{self.height}"
 
     def area(self) -> int:
         return self.height * self.width
@@ -175,7 +175,8 @@ class Tree:
         self.verbose: bool = verbose
 
     def add_box(self, box: Box) -> None:
-        self.log(f"add_box: box={box} root={self.root}")
+        self.log("----------")
+        self.log(f"add_box: box={box} root={self.root} int_max_dist={self.int_max_dist}")
         if self.root is None:
             self.root = box.make_nodes(Point(0, 0), self.verbose)
             self.int_max_dist = self.root.yfeet()
@@ -192,7 +193,7 @@ class Tree:
         return True
     
     def check_fits_below(self, box: Box, node: Branch) -> bool:
-        self.log(f"check_fits_below: box={box} node={node} int_max_dist={self.int_max_dist}")
+        self.log(f"check_fits_below: box={box} node={node} yfeet={node.yfeet()} int_max_dist={self.int_max_dist}")
         if node.origin().y >= self.int_max_dist:
             return False
         return node.xfeet() <= self.total_width
@@ -291,7 +292,7 @@ def calc_linear_feet(boxes: list, container_width: int, print_tree: bool = False
 
 def test() -> None:
     def test_case(container_width: int, boxes: list, expect_lin_feet: int) -> None:
-        lin_feet = calc_linear_feet(boxes, container_width)
+        lin_feet = calc_linear_feet(boxes, container_width, verbose=False, print_tree=False)
         print(lin_feet)
         assert(lin_feet == expect_lin_feet)
 
