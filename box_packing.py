@@ -4,6 +4,7 @@ calculate the linear feet, along the y-axis of the container needed to optimally
 pack all the boxes.
 """
 
+import sys
 from puzzle_types import Final, Any, AnyCallback
 
 # --------------------------------------------------------------------------------
@@ -290,94 +291,277 @@ def calc_linear_feet(boxes: list, container_width: int, print_tree: bool = False
 # --------------------------------------------------------------------------------
 # Tests
 
-def test() -> None:
+def test(which="all", trace=False) -> None:
     def test_case(container_width: int, boxes: list, expect_lin_feet: int) -> None:
-        lin_feet = calc_linear_feet(boxes, container_width, verbose=False, print_tree=False)
+        lin_feet = calc_linear_feet(boxes, container_width, verbose=trace, print_tree=trace)
         print(lin_feet)
         assert(lin_feet == expect_lin_feet)
 
-    # Test 1
-    # 
-    # 1. 10x10
-    # 2. 10x10
-    # 3. 5x5
-    # 4. 5x5
-    # 
-    # Container Width = 15, Optimal Linar Feet = 20
-    test_case(container_width=15,
-              boxes=[
-                  Box(10, 10), Box(10, 10), Box(5, 5), Box(5, 5)
-              ],
-              expect_lin_feet=20)
+    def run_test(name: str, tst: dict) -> None:
+        print(f"Test: {name}\tResult: ", end="\n" if trace else "")
+        test_case(container_width=tst["container_width"], boxes=tst["boxes"], expect_lin_feet=tst["expect_lin_feet"])
 
-    # Test 2
-    # 
-    # 1. 48x48
-    # 2. 36x36
-    # 3. 36x36
-    # 
-    # Container Width = 96, Optimal Linear Feet = 72
-    test_case(container_width=96,
-              boxes=[
-                  Box(48, 48), Box(36, 36), Box(36, 36)
-              ],
-              expect_lin_feet=72)
+    tests = {
+        # Test 1
+        # 
+        # 1. 10x10
+        # 2. 10x10
+        # 3. 5x5
+        # 4. 5x5
+        # 
+        # Container Width = 15, Optimal Linar Feet = 20
+        "test1": dict(container_width=15,
+                      boxes=[
+                          Box(10, 10), Box(10, 10), Box(5, 5), Box(5, 5)
+                      ],
+                      expect_lin_feet=20),
 
-    # Test 3
-    # 
-    # 1. 48x48
-    # 2. 36x36
-    # 3. 36x36
-    # 4. 36x36
-    # 5. 24x48
-    # 6. 24x48
-    # 
-    # Container Width = 96, Optimal Linear Feet = 108
-    test_case(container_width=96,
-              boxes=[
-                  Box(48, 48),
-                  Box(36, 36), Box(36, 36), Box(36, 36),
-                  Box(24, 48), Box(24, 48)
-              ],
-              expect_lin_feet=108)
+        # Test 2
+        # 
+        # 1. 48x48
+        # 2. 36x36
+        # 3. 36x36
+        # 
+        # Container Width = 96, Optimal Linear Feet = 72
+        "test2": dict(container_width=96,
+                      boxes=[
+                          Box(48, 48), Box(36, 36), Box(36, 36)
+                      ],
+                      expect_lin_feet=72),
 
-    # Test 4
-    # 
-    # 1. 48x48
-    # 2. 48x48
-    # 3. 48x48
-    # 4. 36x36
-    # 
-    # Container Width = 96, Optimal Linear Feet = 96
-    test_case(container_width=96,
-              boxes=[
-                  Box(48, 48), Box(48, 48), Box(48, 48),
-                  Box(36, 36)
-              ],
-              expect_lin_feet=96)
+        # Test 3
+        # 
+        # 1. 48x48
+        # 2. 36x36
+        # 3. 36x36
+        # 4. 36x36
+        # 5. 24x48
+        # 6. 24x48
+        # 
+        # Container Width = 96, Optimal Linear Feet = 108
+        "test3": dict(container_width=96,
+                      boxes=[
+                          Box(48, 48),
+                          Box(36, 36), Box(36, 36), Box(36, 36),
+                          Box(24, 48), Box(24, 48)
+                      ],
+                      expect_lin_feet=108),
 
-    # Test 5
-    # 
-    # 1. 48x48
-    # 2. 48x48
-    # 3. 48x48
-    # 4. 36x36
-    # 5. 36x36
-    # 6. 24x48
-    # 7. 24x48
-    # 8. 24x48
-    # 
-    # Container Width = 96, Optimal Linear Feet = 144
-    test_case(container_width=96,
-              boxes=[
-                  Box(48, 48), Box(48, 48), Box(48, 48),
-                  Box(36, 36), Box(36, 36),
-                  Box(24, 48), Box(24, 48), Box(24, 48)
-              ],
-              expect_lin_feet=144)
+        # Test 4
+        # 
+        # 1. 48x48
+        # 2. 48x48
+        # 3. 48x48
+        # 4. 36x36
+        # 
+        # Container Width = 96, Optimal Linear Feet = 96
+        "test4": dict(container_width=96,
+                      boxes=[
+                          Box(48, 48), Box(48, 48), Box(48, 48),
+                          Box(36, 36)
+                      ],
+                      expect_lin_feet=96),
+
+        # Test 5
+        # 
+        # 1. 48x48
+        # 2. 48x48
+        # 3. 48x48
+        # 4. 36x36
+        # 5. 36x36
+        # 6. 24x48
+        # 7. 24x48
+        # 8. 24x48
+        # 
+        # Container Width = 96, Optimal Linear Feet = 144
+        "test5": dict(container_width=96,
+                      boxes=[
+                          Box(48, 48), Box(48, 48), Box(48, 48),
+                          Box(36, 36), Box(36, 36),
+                          Box(24, 48), Box(24, 48), Box(24, 48)
+                      ],
+                      expect_lin_feet=144),
+
+        # Test 6
+        #
+        # 1. 20x10
+        # 2. 10x10
+        # 3. 10x10
+        # 4. 10x10
+        # 5. 10x10
+        #
+        # Container Width = 30, Optimal Linear Feet = 20
+        "test6": dict(container_width=30,
+                      boxes=[
+                          Box(20, 10),
+                          Box(10, 10), Box(10, 10), Box(10, 10), Box(10, 10)
+                      ],
+                      expect_lin_feet=20),
+
+        # Test 6.5
+        #
+        # 1. 20x10
+        # 2. 10x10
+        # 3. 10x10
+        #
+        # Container Width = 30, Optimal Linear Feet = 20
+        "test6.5": dict(container_width=30,
+                        boxes=[
+                            Box(20, 10),
+                            Box(10, 10), Box(10, 10)
+                        ],
+                        expect_lin_feet=20),
+
+        # Test 7
+        #
+        # 1. 20x10
+        # 2. 10x10
+        # 3. 10x10
+        # 4. 10x10
+        # 5. 10x10
+        #
+        # Container Width = 20, Optimal Linear Feet = 30
+        "test7": dict(container_width=20,
+                      boxes=[
+                          Box(20, 10),
+                          Box(10, 10), Box(10, 10), Box(10, 10), Box(10, 10)
+                      ],
+                      expect_lin_feet=30),
+
+        # Test 8
+        #
+        # 1. 13x10
+        # 2. 10x10
+        # 3. 10x10
+        # 4. 10x10
+        # 5. 10x10
+        #
+        # Container Width = 30, Optimal Linear Feet = 20
+        "test8": dict(container_width=30,
+                      boxes=[
+                          Box(13, 10),
+                          Box(10, 10), Box(10, 10), Box(10, 10), Box(10, 10)
+                      ],
+                      expect_lin_feet=20),
+
+        # Test 9
+        #
+        # 1. 13x10
+        # 2. 10x10
+        # 3. 10x10
+        # 4. 10x10
+        # 5. 10x10
+        #
+        # Container Width = 20, Optimal Linear Feet = 30
+        "test9": dict(container_width=20,
+                      boxes=[
+                          Box(13, 10),
+                          Box(10, 10), Box(10, 10), Box(10, 10), Box(10, 10)
+                      ],
+                      expect_lin_feet=30),
+
+        # Test 10
+        #
+        # 1. 13x10
+        # 2. 5x10
+        # 3. 5x10
+        # 4. 5x10
+        # 5. 5x10
+        #
+        # Container Width = 20, Optimal Linear Feet = 18
+        "test10": dict(container_width=20,
+                       boxes=[
+                           Box(13, 10),
+                           Box(5, 10), Box(5, 10), Box(5, 10), Box(5, 10)
+                       ],
+                       expect_lin_feet=18),
+
+        # Test 11
+        # 
+        # 1. 48x48
+        # 2. 48x48
+        # 3. 48x48
+        # 
+        # Container Width = 96, Optimal Linear Feet = 96
+        "test11": dict(container_width=96,
+                       boxes=[
+                           Box(48, 48), Box(48, 48), Box(48, 48)
+                       ],
+                       expect_lin_feet=96),
+
+        # Test 12
+        # 
+        # 1. 48x48
+        # 2. 48x48
+        # 3. 48x48
+        # 4. 48x48
+        # 
+        # Container Width = 96, Optimal Linear Feet = 96
+        "test12": dict(container_width=96,
+                       boxes=[
+                           Box(48, 48), Box(48, 48), Box(48, 48), Box(48, 48)
+                       ],
+                       expect_lin_feet=96),
+
+        # Test 13
+        # 
+        # 1. 48x48
+        # 2. 48x48
+        # 3. 48x48
+        # 4. 48x48
+        # 5. 48x48
+        # 
+        # Container Width = 96, Optimal Linear Feet = 144
+        "test13": dict(container_width=96,
+                       boxes=[
+                           Box(48, 48), Box(48, 48), Box(48, 48), Box(48, 48), Box(48, 48)
+                       ],
+                       expect_lin_feet=144),
+
+        # Test 14
+        # 
+        # 1. 48x48
+        # 2. 48x48
+        # 3. 48x48
+        # 4. 48x48
+        # 5. 48x48
+        # 6. 48x48
+        # 7. 48x48
+        # 8. 48x48
+        # 9. 48x48
+        # 
+        # Container Width = 96, Optimal Linear Feet = 240
+        "test14": dict(container_width=96,
+                       boxes=[
+                           Box(48, 48), Box(48, 48), Box(48, 48), Box(48, 48), Box(48, 48),
+                           Box(48, 48), Box(48, 48), Box(48, 48), Box(48, 48)
+                       ],
+                       expect_lin_feet=240)
+    }
+
+    if which == "all":
+        for nm, tst in tests.items():
+            # TODO: Fix excluded tests
+            if nm in { "test6", "test8", "test10", "test13", "test14" }:
+                continue
+            run_test(nm, tst)
+    else:
+        run_test(which, tests[which])
 
 # --------------------------------------------------------------------------------
 # Main
 
+def main():
+    # Usage:
+    #   python3 box_packing.py [<test_name>] [trace]
+
+    which = "all"
+    trace = False
+    if len(sys.argv) >= 2:
+        which = sys.argv[1]
+    if len(sys.argv) >= 3:
+        trace = sys.argv[2] == "trace"
+    test(which, trace)
+
 if __name__ == "__main__":
-    test()
+    main()
