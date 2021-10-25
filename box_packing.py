@@ -37,6 +37,7 @@ def prt_point(pt: Point):
 Box = Tuple[int, int, int, int]
 
 def make_box(tag: int, h: int, w: int) -> Box:
+    assert(tag > 0)
     return (BOX, h, w, tag)
 
 def is_box(box: Any) -> bool:
