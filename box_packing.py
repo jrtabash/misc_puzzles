@@ -1,307 +1,166 @@
 """
 Given a container, with a specified width, and a list of varying size 2D boxes,
-calculate the linear feet, along the y-axis of the container needed to optimally
-pack all the boxes.
+calculate the linear distance, along the y-axis of the container needed to pack
+all the boxes.
 """
 
 import sys
-from puzzle_types import Final, Any, AnyCallback
+import numpy as np
+from puzzle_types import Any, Optional, Tuple
 
 # --------------------------------------------------------------------------------
-# Geometric Helpers
+# Point
 
-class Point:
-    """
-    A 2D point, represented by (x, y)
-    """
+Point = Tuple[int, int, int]
 
-    def __init__(self, x: int, y: int) -> None:
-        self.x: int = x
-        self.y: int = y
+def make_point(h: int, w: int) -> Point:
+    return (0, h, w)
     
-    def __str__(self) -> str:
-        return f"({self.x}, {self.y})"
+def is_point(pt: Any) -> bool:
+    return isinstance(pt, tuple) and  pt[0] == 0
+    
+def point_height(pt: Point) -> int:
+    return pt[1]
 
-class Rectangle:
-    """
-    A 2D rectangle, represented by a point of origin, and x and y distances.
-    """
+def point_width(pt: Point) -> int:
+    return pt[2]
 
-    def __init__(self, origin: Point, xdist: int, ydist: int) -> None:
-        self.origin: Point = origin
-        self.xdist: int = xdist
-        self.ydist: int = ydist
-    
-    def __str__(self) -> str:
-        return f"[{self.origin} {self.xdist}x{self.ydist}]"
-    
-    def area(self) -> int:
-        return self.xdist * self.ydist
-    
-    def xfeet(self) -> int:
-        return self.origin.x + self.xdist
-    
-    def yfeet(self) -> int:
-        return self.origin.y + self.ydist
+def prt_point(pt: Point):
+    print(f"({point_height(pt)},{point_width(pt)})")
 
 # --------------------------------------------------------------------------------
-# Node Classes
+# Box
 
-class Node:
-    """
-    Node represents a splitting of the container space, which would be one of 3 types;
-    - Height := Splits space along the container length, y-axes
-    - Width := Splits space along the container width, x-axis
-    - Leaf := Area has a box
-    """
+Box = Tuple[int, int, int, int]
 
-    class Type:
-        Height: Final = 'H' # Splits space along the y axis of the container, increases downwards
-        Width: Final = 'W'  # Splits space across the x axis of the conainer, increases to the right
-        Leaf: Final = 'L'   # A box
+def make_box(tag: int, h: int, w: int) -> Box:
+    return (1, h, w, tag)
 
-    def __init__(self, node_type: str, rectangle: Rectangle) -> None:
-        self.node_type: str = node_type
-        self.rectangle: Rectangle = rectangle
+def is_box(box: Any) -> bool:
+    return isinstance(box, tuple) and box[0] == 1
 
-class Branch (Node):
-    """
-    A branch is a node that splits space eight by height or by width.
-    """
+def box_height(box: Box) -> int:
+    return box[1]
 
-    def __init__(self, branch_type: str, rectangle: Rectangle):
-        super().__init__(branch_type, rectangle)
-        self.left_child: Any = None
-        self.right_child: Any = None
-        
-    def __str__(self) -> str:
-        return f"[Branch: {self.node_type} {self.rectangle}]"
-    
-    def origin(self) -> Point:
-        return self.rectangle.origin
+def box_width(box: Box) -> int:
+    return box[2]
 
-    def xfeet(self) -> int:
-        return self.rectangle.xfeet()
+def box_tag(box: Box) -> int:
+    return box[3]
 
-    def yfeet(self) -> int:
-        return self.rectangle.yfeet()
+def box_area(box: Box) -> int:
+    return box_height(box) * box_width(box)
 
-class Leaf (Node):
-    """
-    A leaf is a node that represents a box
-    """
-
-    def __init__(self, rectangle: Rectangle) -> None:
-        super().__init__(Node.Type.Leaf, rectangle)
-    
-    def __str__(self) -> str:
-        return f"[Leaf: {self.rectangle}]"
+def prt_box(box: Box):
+    print(f"{box_tag(box)}:{box_height(box)}x{box_width(box)}")
 
 # --------------------------------------------------------------------------------
-# Box Class
+# Container
 
-class Box:
-    """
-    A 2D box.
-    """
+Container = np.ndarray
 
-    def __init__(self, height: int, width: int) -> None:
-        self.height: int = height
-        self.width: int = width
-    
-    def __str__(self) -> str:
-        return f"{self.width}x{self.height}"
+def make_container(h: int, w: int) -> Container:
+    return np.zeros((h, w), dtype=np.int16)
 
-    def area(self) -> int:
-        return self.height * self.width
-    
-    def make_nodes(self, origin: Point, verbose: bool = False) -> Any:
-        """
-        Will create
-               [Branch: Y axis split]
-              /
-             [Branch: X axis split]
-            /
-           [Leaf: box]
-        """
-        rectangle = Rectangle(origin, self.width, self.height)
-        hnode = Branch(Node.Type.Height, rectangle)
-        wnode = Branch(Node.Type.Width, rectangle)
-        wnode.left_child = Leaf(rectangle)
-        hnode.left_child = wnode
-        if verbose:
-            print(f"***** make_nodes: hnode={hnode} wnode={wnode} rectangle={rectangle}")
-        return hnode
+def is_container(container: Any) -> bool:
+    return isinstance(container, np.ndarray)
+
+def container_height(container: Container) -> int:
+    return container.shape[0]
+
+def container_width(container: Container) -> int:
+    return container.shape[1]
+
+def container_max_dist(container: Container) -> int:
+    dist = 0
+    for row in container:
+        if np.sum(row) == 0:
+            break
+        dist += 1
+    return dist
+
+def prt_container(container: Container, empty: bool = True):
+    for row in container:
+        if not empty and np.all(row == 0):
+            break
+        for cell in row:
+            print(cell, end="")
+        print("")
 
 # --------------------------------------------------------------------------------
-# Tree Class and Helpers
+# Algorithm
 
-class MaxDistCalc:
-    """
-    Functor to be used with Tree.walk_tree function.
-    Will calculate the max distance (container depth/height needed to store the boxes.
+def find_add_point(container: Container, box: Box) -> Optional[Point]:
+    assert(is_container(container))
+    assert(is_box(box))
+    for h in range(container_height(container)):
+        for w in range(container_width(container)):
+            if container[h, w] == 0:
+                if (w + box_width(box)) <= container_width(container):
+                    if np.all(container[h:h+box_height(box), w:w+box_width(box)] == 0):
+                        return make_point(h, w)
+    return None
 
-    Requirements: Tree node distances must be pre-populated before this is used.
-    """
+def add_box(container: Container, box: Box):
+    sp = find_add_point(container, box)
+    assert(sp is not None)
+    ep = make_point(point_height(sp) + box_height(box), point_width(sp) + box_width(box))
+    container[point_height(sp):point_height(ep), point_width(sp):point_width(ep)] = box_tag(box)
 
-    def __init__(self) -> None:
-        self.distance = 0
+def calc_dist(cw: int, boxes: list, trace: bool = False) -> int:
+    def try_calc(reverse: bool):
+        boxes.sort(key=lambda b: box_area(b), reverse=reverse)
 
-    def __call__(self, node: Any) -> None:
-        if isinstance(node, Branch) and node.node_type == Node.Type.Height:
-            self.distance = max(self.distance, node.yfeet())
+        if trace:
+            for box in boxes:
+                prt_box(box)
 
-class PrintNode:
-    """
-    Functor to be used with Tree.walk_tree function.
-    """
+        ch = box_height(boxes[0]) * len(boxes)
+        container = make_container(ch, cw)
+        for box in boxes:
+            add_box(container, box)
 
-    def __call__(self, node: Any) -> None:
-        if isinstance(node, Branch):
-            print(f"{node} : left={node.left_child} right={node.right_child}")
-        else:
-            print(f"{node}\n")
+        if trace:
+            prt_container(container, empty=False)
 
-class Tree:
-    """
-    Tree structure will hold the nodes that divide the space.
-    Branch := Branch node that separates space either horzontall or vertically
-    Leaf := Leaf node that holds a Box
-    """
+        return container_max_dist(container)
 
-    def __init__(self, total_width: int, verbose: bool = False) -> None:
-        self.root: Any = None
-        self.total_width: int = total_width # Container width
-        self.int_max_dist: int = 0 # Interim max distance
-        self.verbose: bool = verbose
-
-    def add_box(self, box: Box) -> None:
-        self.log("----------")
-        self.log(f"add_box: box={box} root={self.root} int_max_dist={self.int_max_dist}")
-        if self.root is None:
-            self.root = box.make_nodes(Point(0, 0), self.verbose)
-            self.int_max_dist = self.root.yfeet()
-        else:
-            if not self.try_left(self.root, box):
-                if not self.try_right(self.root, box):
-                    self.new_height_split(self.root, box, True)
-
-    def check_fits_right(self, box: Box, node: Branch) -> bool:
-        new_width = node.xfeet() + box.width
-        self.log(f"check_fits_right: box={box} node={node} new_width={new_width} max_width={self.total_width}")
-        if new_width > self.total_width:
-            return False
-        return True
-    
-    def check_fits_below(self, box: Box, node: Branch) -> bool:
-        self.log(f"check_fits_below: box={box} node={node} yfeet={node.yfeet()} int_max_dist={self.int_max_dist}")
-        if node.origin().y >= self.int_max_dist:
-            return False
-        return node.xfeet() <= self.total_width
-
-    def new_origin(self, node: Branch) -> Point:
-        origin = None
-        if (node.node_type == Node.Type.Height):
-            origin = Point(node.origin().x, node.yfeet())
-        else:
-            assert(node.node_type == Node.Type.Width)
-            origin = Point(node.xfeet(), node.origin().y)
-        self.log(f"new_origin: node={node} origin={origin}")
-        return origin
-
-    def try_left(self, node: Branch, box: Box) -> bool:
-        self.log(f"try_left: node={node} box={box}")
-        # Left node assumed to always exist, because of use of function box.make_nodes
-        left_node = node.left_child
-        if left_node.right_child is None:
-            if self.check_fits_right(box, node):
-                left_node.right_child = box.make_nodes(self.new_origin(left_node), self.verbose)
-                return True
-        else:
-            if self.try_left(left_node.right_child, box):
-                return True
-            if self.try_right(left_node.right_child, box):
-                return True
-        return False
-
-    def try_right(self, node: Branch, box: Box) -> bool:
-        self.log(f"try_right: node={node} box={box}")
-        right_node = node.right_child
-        if right_node is None:
-            if self.check_fits_below(box, node):
-                self.new_height_split(node, box, False)
-                return True
-        else:
-            if self.try_left(right_node, box):
-                return True
-            if self.try_right(right_node, box):
-                return True
-        return False
-
-    def new_height_split(self, node: Branch, box: Box, track_int: bool) -> None:
-        self.log(f"new_height_split: node={node} box={box} track_int={track_int}")
-        cur = node
-        while cur.right_child is not None:
-            cur = cur.right_child
-        cur.right_child = box.make_nodes(self.new_origin(cur), self.verbose)
-        if track_int:
-            self.int_max_dist = cur.right_child.yfeet()
-
-    def walk_tree(self, ftn: AnyCallback) -> None:
-        def walk(node: Any):
-            ftn(node)
-            if isinstance(node, Branch):
-                if node.left_child:
-                    walk(node.left_child)
-                if node.right_child:
-                    walk(node.right_child)
-        walk(self.root)
-
-    def linear_feet(self) -> int:
-        maxDist = MaxDistCalc()
-        self.walk_tree(maxDist)
-        return maxDist.distance
-    
-    def print_tree(self) -> None:
-        self.walk_tree(PrintNode())
-    
-    def log(self, msg: str) -> None:
-        if self.verbose:
-            print(f"***** {msg}")
-
-# --------------------------------------------------------------------------------
-# Linear Feet Calculator Entry Point
-
-def calc_linear_feet(boxes: list, container_width: int, print_tree: bool = False, verbose: bool = False) -> int:
-    """
-    Solve box packing problem:
-    - Sort the boxes from largest area to smallest area
-    - Create a empty tree, and add boxes to tree in sorted order
-    - Walk tree to find max linear feet
-    """
-
-    boxes.sort(key=lambda box: box.area(), reverse=True)
-    tree = Tree(container_width, verbose=verbose)
-    for box in boxes:
-        tree.add_box(box)
-    if print_tree:
-        tree.print_tree()
-    return tree.linear_feet()
+    return min(try_calc(True), try_calc(False))
 
 # --------------------------------------------------------------------------------
 # Tests
 
-def test(which="all", trace=False) -> None:
-    def test_case(container_width: int, boxes: list, expect_lin_feet: int) -> None:
-        lin_feet = calc_linear_feet(boxes, container_width, verbose=trace, print_tree=trace)
-        print(lin_feet)
-        assert(lin_feet == expect_lin_feet)
+def run_test(which="all", trace=False):
+    def test_case(name, case):
+        global NEXT_ID
+        NEXT_ID = 0
+        def next_id():
+            global NEXT_ID
+            NEXT_ID += 1
+            return NEXT_ID
 
-    def run_test(name: str, tst: dict) -> None:
-        print(f"Test: {name}\tResult: ", end="\n" if trace else "")
-        test_case(container_width=tst["container_width"], boxes=tst["boxes"], expect_lin_feet=tst["expect_lin_feet"])
+        dist = calc_dist(
+                cw=case["container_width"],
+                boxes=[make_box(next_id(), h, w) for h, w in case["boxes"]],
+                trace=trace)
+
+        check = case["check"]
+        success = dist == check
+        print(f"{name}\t{dist}\t{check}\t{success}")
 
     tests = {
+        # Test 0
+        # 
+        # 1. 2x5
+        # 2. 4x3
+        # 3. 4x2
+        # 4. 2x3
+        #
+        # Container Width = 10, Optimal Linear Feet = 4
+        "test0": dict(container_width=10,
+                      boxes=[(2, 5), (4, 3), (4, 2), (2, 3)],
+                      check=4),
+
         # Test 1
         # 
         # 1. 10x10
@@ -309,12 +168,12 @@ def test(which="all", trace=False) -> None:
         # 3. 5x5
         # 4. 5x5
         # 
-        # Container Width = 15, Optimal Linar Feet = 20
+        # Container Width = 15, Optimal Linear Feet = 20
         "test1": dict(container_width=15,
                       boxes=[
-                          Box(10, 10), Box(10, 10), Box(5, 5), Box(5, 5)
+                          (10, 10), (10, 10), (5, 5), (5, 5)
                       ],
-                      expect_lin_feet=20),
+                      check=20),
 
         # Test 2
         # 
@@ -325,9 +184,9 @@ def test(which="all", trace=False) -> None:
         # Container Width = 96, Optimal Linear Feet = 72
         "test2": dict(container_width=96,
                       boxes=[
-                          Box(48, 48), Box(36, 36), Box(36, 36)
+                          (48, 48), (36, 36), (36, 36)
                       ],
-                      expect_lin_feet=72),
+                      check=72),
 
         # Test 3
         # 
@@ -341,11 +200,47 @@ def test(which="all", trace=False) -> None:
         # Container Width = 96, Optimal Linear Feet = 108
         "test3": dict(container_width=96,
                       boxes=[
-                          Box(48, 48),
-                          Box(36, 36), Box(36, 36), Box(36, 36),
-                          Box(24, 48), Box(24, 48)
+                          (48, 48),
+                          (36, 36), (36, 36), (36, 36),
+                          (24, 48), (24, 48)
                       ],
-                      expect_lin_feet=108),
+                      check=108),
+
+        # Test 3.1
+        # 
+        # 1. 8x8
+        # 2. 6x6
+        # 3. 6x6
+        # 4. 6x6
+        # 5. 4x8
+        # 6. 4x8
+        # 
+        # Container Width = 16, Optimal Linear Feet = 14
+        "test3.1": dict(container_width=16,
+                        boxes=[
+                            (8, 8),
+                            (6, 6), (6, 6), (6, 6),
+                            (4, 8), (4, 8)
+                        ],
+                        check=18),
+
+        # Test 3.5
+        # 
+        # 1. 12x12
+        # 2. 8x8
+        # 3. 8x8
+        # 4. 8x8
+        # 5. 6x12
+        # 6. 6x12
+        # 
+        # Container Width = 24, Optimal Linear Feet = 27
+        "test3.5": dict(container_width=24,
+                        boxes=[
+                            (12, 12),
+                            (8, 8), (8, 8), (8, 8),
+                            (6, 12), (6, 12)
+                        ],
+                        check=20),
 
         # Test 4
         # 
@@ -357,10 +252,10 @@ def test(which="all", trace=False) -> None:
         # Container Width = 96, Optimal Linear Feet = 96
         "test4": dict(container_width=96,
                       boxes=[
-                          Box(48, 48), Box(48, 48), Box(48, 48),
-                          Box(36, 36)
+                          (48, 48), (48, 48), (48, 48),
+                          (36, 36)
                       ],
-                      expect_lin_feet=96),
+                      check=96),
 
         # Test 5
         # 
@@ -376,11 +271,11 @@ def test(which="all", trace=False) -> None:
         # Container Width = 96, Optimal Linear Feet = 144
         "test5": dict(container_width=96,
                       boxes=[
-                          Box(48, 48), Box(48, 48), Box(48, 48),
-                          Box(36, 36), Box(36, 36),
-                          Box(24, 48), Box(24, 48), Box(24, 48)
+                          (48, 48), (48, 48), (48, 48),
+                          (36, 36), (36, 36),
+                          (24, 48), (24, 48), (24, 48)
                       ],
-                      expect_lin_feet=144),
+                      check=144),
 
         # Test 6
         #
@@ -393,10 +288,10 @@ def test(which="all", trace=False) -> None:
         # Container Width = 30, Optimal Linear Feet = 20
         "test6": dict(container_width=30,
                       boxes=[
-                          Box(20, 10),
-                          Box(10, 10), Box(10, 10), Box(10, 10), Box(10, 10)
+                          (20, 10),
+                          (10, 10), (10, 10), (10, 10), (10, 10)
                       ],
-                      expect_lin_feet=20),
+                      check=20),
 
         # Test 6.5
         #
@@ -407,10 +302,10 @@ def test(which="all", trace=False) -> None:
         # Container Width = 30, Optimal Linear Feet = 20
         "test6.5": dict(container_width=30,
                         boxes=[
-                            Box(20, 10),
-                            Box(10, 10), Box(10, 10)
+                            (20, 10),
+                            (10, 10), (10, 10)
                         ],
-                        expect_lin_feet=20),
+                        check=20),
 
         # Test 7
         #
@@ -423,10 +318,10 @@ def test(which="all", trace=False) -> None:
         # Container Width = 20, Optimal Linear Feet = 30
         "test7": dict(container_width=20,
                       boxes=[
-                          Box(20, 10),
-                          Box(10, 10), Box(10, 10), Box(10, 10), Box(10, 10)
+                          (20, 10),
+                          (10, 10), (10, 10), (10, 10), (10, 10)
                       ],
-                      expect_lin_feet=30),
+                      check=30),
 
         # Test 8
         #
@@ -439,10 +334,10 @@ def test(which="all", trace=False) -> None:
         # Container Width = 30, Optimal Linear Feet = 20
         "test8": dict(container_width=30,
                       boxes=[
-                          Box(13, 10),
-                          Box(10, 10), Box(10, 10), Box(10, 10), Box(10, 10)
+                          (13, 10),
+                          (10, 10), (10, 10), (10, 10), (10, 10)
                       ],
-                      expect_lin_feet=20),
+                      check=20),
 
         # Test 9
         #
@@ -455,10 +350,10 @@ def test(which="all", trace=False) -> None:
         # Container Width = 20, Optimal Linear Feet = 30
         "test9": dict(container_width=20,
                       boxes=[
-                          Box(13, 10),
-                          Box(10, 10), Box(10, 10), Box(10, 10), Box(10, 10)
+                          (13, 10),
+                          (10, 10), (10, 10), (10, 10), (10, 10)
                       ],
-                      expect_lin_feet=30),
+                      check=30),
 
         # Test 10
         #
@@ -471,10 +366,10 @@ def test(which="all", trace=False) -> None:
         # Container Width = 20, Optimal Linear Feet = 18
         "test10": dict(container_width=20,
                        boxes=[
-                           Box(13, 10),
-                           Box(5, 10), Box(5, 10), Box(5, 10), Box(5, 10)
+                           (13, 10),
+                           (5, 10), (5, 10), (5, 10), (5, 10)
                        ],
-                       expect_lin_feet=18),
+                       check=18),
 
         # Test 11
         # 
@@ -485,9 +380,9 @@ def test(which="all", trace=False) -> None:
         # Container Width = 96, Optimal Linear Feet = 96
         "test11": dict(container_width=96,
                        boxes=[
-                           Box(48, 48), Box(48, 48), Box(48, 48)
+                           (48, 48), (48, 48), (48, 48)
                        ],
-                       expect_lin_feet=96),
+                       check=96),
 
         # Test 12
         # 
@@ -499,9 +394,9 @@ def test(which="all", trace=False) -> None:
         # Container Width = 96, Optimal Linear Feet = 96
         "test12": dict(container_width=96,
                        boxes=[
-                           Box(48, 48), Box(48, 48), Box(48, 48), Box(48, 48)
+                           (48, 48), (48, 48), (48, 48), (48, 48)
                        ],
-                       expect_lin_feet=96),
+                       check=96),
 
         # Test 13
         # 
@@ -514,9 +409,10 @@ def test(which="all", trace=False) -> None:
         # Container Width = 96, Optimal Linear Feet = 144
         "test13": dict(container_width=96,
                        boxes=[
-                           Box(48, 48), Box(48, 48), Box(48, 48), Box(48, 48), Box(48, 48)
+                           (48, 48), (48, 48), (48, 48), (48, 48), 
+                           (48, 48)
                        ],
-                       expect_lin_feet=144),
+                       check=144),
 
         # Test 14
         # 
@@ -533,20 +429,19 @@ def test(which="all", trace=False) -> None:
         # Container Width = 96, Optimal Linear Feet = 240
         "test14": dict(container_width=96,
                        boxes=[
-                           Box(48, 48), Box(48, 48), Box(48, 48), Box(48, 48), Box(48, 48),
-                           Box(48, 48), Box(48, 48), Box(48, 48), Box(48, 48)
+                           (48, 48), (48, 48), (48, 48), (48, 48), 
+                           (48, 48), (48, 48), (48, 48), (48, 48), 
+                           (48, 48)
                        ],
-                       expect_lin_feet=240)
+                       check=240)
     }
 
+    print("Test\tDist\tCheck\tSuccess")
     if which == "all":
-        for nm, tst in tests.items():
-            # TODO: Fix excluded tests
-            if nm in { "test6", "test8", "test10", "test13", "test14" }:
-                continue
-            run_test(nm, tst)
+        for name, case in tests.items():
+            test_case(name, case)
     else:
-        run_test(which, tests[which])
+        test_case(which, tests[which])
 
 # --------------------------------------------------------------------------------
 # Main
@@ -561,7 +456,7 @@ def main():
         which = sys.argv[1]
     if len(sys.argv) >= 3:
         trace = sys.argv[2] == "trace"
-    test(which, trace)
+    run_test(which, trace)
 
 if __name__ == "__main__":
     main()

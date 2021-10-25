@@ -4,7 +4,7 @@ in the misc_puzzles repo.
 """
 
 import typing
-from typing import Final, Any
+from typing import Final, Any, Optional, Tuple
 
 # -------------------------
 # Integer Misc
