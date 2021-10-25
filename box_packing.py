@@ -218,7 +218,7 @@ def run_test(which="all", trace=False):
         # 5. 4x8
         # 6. 4x8
         # 
-        # Container Width = 16, Optimal Linear Feet = 14
+        # Container Width = 16, Optimal Linear Feet = 18
         "test3.1": dict(container_width=16,
                         boxes=[
                             (8, 8),
@@ -236,7 +236,7 @@ def run_test(which="all", trace=False):
         # 5. 6x12
         # 6. 6x12
         # 
-        # Container Width = 24, Optimal Linear Feet = 27
+        # Container Width = 24, Optimal Linear Feet = 20
         "test3.5": dict(container_width=24,
                         boxes=[
                             (12, 12),
