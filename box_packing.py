@@ -6,7 +6,10 @@ all the boxes.
 
 import sys
 import numpy as np
-from puzzle_types import Any, Optional, Tuple
+from puzzle_types import Any, Optional, Tuple, Final
+
+POINT: Final = 0
+BOX: Final = 1
 
 # --------------------------------------------------------------------------------
 # Point
@@ -14,10 +17,10 @@ from puzzle_types import Any, Optional, Tuple
 Point = Tuple[int, int, int]
 
 def make_point(h: int, w: int) -> Point:
-    return (0, h, w)
+    return (POINT, h, w)
     
 def is_point(pt: Any) -> bool:
-    return isinstance(pt, tuple) and  pt[0] == 0
+    return isinstance(pt, tuple) and pt[0] == POINT
     
 def point_height(pt: Point) -> int:
     return pt[1]
@@ -34,10 +37,10 @@ def prt_point(pt: Point):
 Box = Tuple[int, int, int, int]
 
 def make_box(tag: int, h: int, w: int) -> Box:
-    return (1, h, w, tag)
+    return (BOX, h, w, tag)
 
 def is_box(box: Any) -> bool:
-    return isinstance(box, tuple) and box[0] == 1
+    return isinstance(box, tuple) and box[0] == BOX
 
 def box_height(box: Box) -> int:
     return box[1]
