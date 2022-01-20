@@ -3,6 +3,7 @@ Given an integer N, generate all primes less
 than or equal to N.
 """
 
+import sys
 import math
 from puzzle_types import IntArray, IntGenerator
 
@@ -37,13 +38,24 @@ def generate_primes(max_int: int) -> IntGenerator:
             primes.append(cur_int)
             yield cur_int
 
-def test_generate() -> None:
+def test_generate(to_num: int) -> None:
     """
-    Generate all primes between 1 and 100.
+    Generate all primes between 1 and to_num.
     """
 
-    for prime in generate_primes(100):
+    for prime in generate_primes(to_num):
         print(prime)
 
+def get_to_num() -> int:
+    """
+    Read and return to_num value from argv if specified,
+    return 100 otherwise.
+    """
+
+    to_num = 100
+    if len(sys.argv) >= 2:
+        to_num = int(sys.argv[1])
+    return to_num
+
 if __name__ == "__main__":
-    test_generate()
+    test_generate(get_to_num())
