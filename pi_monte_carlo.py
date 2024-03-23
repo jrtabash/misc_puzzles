@@ -22,6 +22,8 @@ Implementation will assume r = 1.
 
 import math
 import random
+import sys
+import numpy as np
 from typing import Tuple
 
 Point = Tuple[float, float]
@@ -29,24 +31,21 @@ Point = Tuple[float, float]
 def next_point() -> Point:
     """
     Generate and return a random (x, y) point, with
-    both x and y in range [0.0, 2.0)
+    both x and y in range [0.0, 1.0)
     """
 
-    def next_coord() -> float:
-        return 2.0 * random.random()
-
-    return next_coord(), next_coord()
+    return random.random(), random.random()
 
 def in_unit_circle(pt: Point) -> bool:
     """
-    Check if point is unit circle centered at (1.0, 1.0)
+    Check if point is unit circle
     """
 
-    return math.sqrt((pt[0] - 1.0)**2 + (pt[1] - 1.0)**2) <= 1.0
+    return math.sqrt(pt[0]**2 + pt[1]**2) <= 1.0
 
 def estimate_pi(samples: int = 1000000,
                 experiments: int = 1,
-                verbose: bool = False) -> float:
+                verbose: bool = False) -> Tuple[float, float]:
     """
     Estimate value of Pi using Monte Carlo method.
 
@@ -56,7 +55,7 @@ def estimate_pi(samples: int = 1000000,
     Return: Average of all experiments
     """
 
-    pi_sum: float = 0.0
+    pi_guesses = []
 
     for sim in range(1, experiments + 1):
         in_circle_cnt: int = 0
@@ -66,21 +65,43 @@ def estimate_pi(samples: int = 1000000,
                 in_circle_cnt += 1
 
         pi_estimate = 4.0 * in_circle_cnt / float(samples)
-        pi_sum += pi_estimate
+        pi_guesses.append(pi_estimate)
 
         if verbose:
-            print(f"Sim {sim}: estimate {pi_estimate}")
+            print("Sim {:04d} of {:04d}: estimate {:.08f} samples {}".format(sim, experiments, pi_estimate, samples))
 
-    return pi_sum / float(experiments)
+    return sum(pi_guesses) / len(pi_guesses), float(np.std(pi_guesses))
 
 def test_pi() -> None:
     """
     Test Monte Carlo pi estimator
     """
 
-    pi = estimate_pi(samples=1000000, experiments=100, verbose=True)
+    pi, std = estimate_pi(samples=1000000, experiments=100, verbose=True)
     err = abs(math.pi - pi)
-    print(f"\nPi = {pi}\nEr = {err}")
+    print(f"\nPi = {pi}\nSD = {std}\nEr = {err}")
+
+def search_pi(precision: float, base_samples: int = 10000, experiments: int = 10, multiplier: int = 2, verbose: bool = False):
+    """
+    Estimate pi using Monte Carlo estimater, doubling number of
+    samples until specified precision is reached
+    """
+
+    samples = base_samples
+    samples_multiplier = max(2, multiplier)
+    std = precision
+    stop_precision = precision / 2.0
+
+    while std >= stop_precision:
+        pi, std = estimate_pi(samples=samples, experiments=experiments, verbose=verbose)
+        samples *= samples_multiplier
+
+    err = abs(math.pi - pi)
+
+    print(f"\nPi = {pi}\nSD = {std}\nEr = {err}")
 
 if __name__ == "__main__":
-    test_pi()
+    if len(sys.argv) > 1 and sys.argv[1] == "search":
+        search_pi(precision=0.005, base_samples=10000, experiments=100, verbose=True)
+    else:
+        test_pi()
